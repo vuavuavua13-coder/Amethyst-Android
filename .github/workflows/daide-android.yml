@@ -1,0 +1,38 @@
+name: Đại Đế Tu Tiên Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dai-de-oneclick
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Cài Java cho Gradle
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Chuẩn bị Gradle
+        run: chmod +x gradlew
+      - name: Build APK
+        run: ./gradlew :app_pojavlauncher:assembleDebug --stacktrace
+      - name: Gom APK
+        run: |
+          mkdir -p out
+          find app_pojavlauncher/build/outputs/apk -type f -name "*.apk" -exec cp {} out/DAIDE_TUTIEN_ANDROID.apk \;
+          ls -lah out
+      - name: Xuất APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DAIDE_TUTIEN_ANDROID_APK
+          path: out/DAIDE_TUTIEN_ANDROID.apk
+          if-no-files-found: error
