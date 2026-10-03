@@ -100,7 +100,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "org.angelauramc.amethyst"
+        applicationId "vn.daide.tutien"
         minSdkVersion 21
         targetSdkVersion 34
         versionCode 10000000
@@ -122,11 +122,11 @@ android {
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.customDebug
-            resValue "string", "app_name", "Amethyst (Debug)"
-            resValue "string", "app_short_name", "Amethyst (Debug)"
-            resValue 'string', 'application_package', 'org.angelauramc.amethyst.debug'
-            resValue 'string', 'storageProviderAuthorities', 'org.angelauramc.amethyst.scoped.gamefolder.debug'
-            resValue 'string', 'shareProviderAuthority', 'org.angelauramc.amethyst.scoped.controlfolder.debug'
+            resValue "string", "app_name", "Đại Đế Tu Tiên"
+            resValue "string", "app_short_name", "Đại Đế Tu Tiên"
+            resValue 'string', 'application_package', 'vn.daide.tutien.debug'
+            resValue 'string', 'storageProviderAuthorities', 'vn.daide.tutien.scoped.gamefolder.debug'
+            resValue 'string', 'shareProviderAuthority', 'vn.daide.tutien.scoped.controlfolder.debug'
         }
         proguard {
             initWith debug
@@ -146,10 +146,10 @@ android {
             // defaultConfig already set
             // multiDexEnabled = true
             // debuggable = true
-            resValue "string", "app_name", "Amethyst"
-            resValue "string", "app_short_name", "Amethyst"
-            resValue 'string', 'storageProviderAuthorities', 'org.angelauramc.amethyst.scoped.gamefolder'
-            resValue 'string', 'application_package', 'org.angelauramc.amethyst'
+            resValue "string", "app_name", "Đại Đế Tu Tiên"
+            resValue "string", "app_short_name", "Đại Đế Tu Tiên"
+            resValue 'string', 'storageProviderAuthorities', 'vn.daide.tutien.scoped.gamefolder'
+            resValue 'string', 'application_package', 'vn.daide.tutien'
         }
         gplay {
             initWith release
