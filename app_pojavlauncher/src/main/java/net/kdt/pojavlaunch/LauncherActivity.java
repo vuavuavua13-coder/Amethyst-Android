@@ -338,7 +338,16 @@ public class LauncherActivity extends BaseActivity {
 
         ExtraCore.addExtraListener(ExtraConstants.LAUNCH_GAME, mLaunchGameListener);
 
-        new AsyncVersionList().getVersionList(versions -> ExtraCore.setValue(ExtraConstants.RELEASE_TABLE, versions), false);
+        new AsyncVersionList().getVersionList(versions -> {
+            ExtraCore.setValue(ExtraConstants.RELEASE_TABLE, versions);
+            // Always repair/select the fixed Đại Đế profile after storage + version metadata are ready.
+            LauncherProfiles.load();
+            MinecraftProfile daiDe = LauncherProfiles.mainProfileJson.profiles.get("daide-tu-tien");
+            if (daiDe != null && (daiDe.lastVersionId == null || "Unknown".equals(daiDe.lastVersionId))) {
+                daiDe.lastVersionId = "1.20.1";
+                LauncherProfiles.write();
+            }
+        }, false);
 
         mInstallTracker = new ModloaderInstallTracker(this);
 
