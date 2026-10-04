@@ -29,6 +29,11 @@ import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.modloaders.LWJGL3ifyUtils;
+import net.kdt.pojavlaunch.modloaders.ForgeUtils;
+import net.kdt.pojavlaunch.modloaders.ForgeDownloadTask;
+import net.kdt.pojavlaunch.modloaders.ModloaderDownloadListener;
+import net.kdt.pojavlaunch.JavaGUILauncherActivity;
+import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
@@ -71,19 +76,8 @@ public class MainMenuFragment extends Fragment {
         } else mInstallJarButton.setOnClickListener(v -> hasNoOnlineProfileDialog(requireActivity()));
         mEditProfileButton.setOnClickListener(v -> mVersionSpinner.openProfileEditor(requireActivity()));
 
-        mPlayButton.setOnClickListener(v -> {
-            if (Tools.hasMods("sodium") && !(LauncherPreferences.DEFAULT_PREF.getBoolean("sodium_override", false))) {
-                AlertDialog sodiumWarningDialog = new AlertDialog.Builder(requireContext())
-                        .setTitle(R.string.sodium_warning_title)
-                        .setMessage(R.string.sodium_warning_message)
-                        .setNeutralButton(R.string.delete_sodium, (d,w)-> {
-                            Tools.deleteSodiumMods();
-                            ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true);
-                        })
-                        .create();
-                sodiumWarningDialog.show();
-            } else ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true);
-        });
+        mPlayButton.setText("CHƠI");
+        mPlayButton.setOnClickListener(v -> startDaiDeOneClick(mPlayButton));
 
         mShareLogsButton.setOnClickListener((v) -> shareLog(requireContext()));
 
@@ -101,6 +95,64 @@ public class MainMenuFragment extends Fragment {
             Tools.swapFragment(requireActivity(), GamepadMapperFragment.class, GamepadMapperFragment.TAG, null);
             return true;
         });
+    }
+
+    private static final String DAIDE_MC = "1.20.1";
+    private static final String DAIDE_FORGE = "47.3.22";
+    private static final String DAIDE_FORGE_ID = DAIDE_MC + "-forge-" + DAIDE_FORGE;
+
+    private void startDaiDeOneClick(Button playButton) {
+        playButton.setEnabled(false);
+        playButton.setText("ĐANG KIỂM TRA...");
+        LauncherProfiles.load();
+        MinecraftProfile profile = LauncherProfiles.mainProfileJson.profiles.get("daide-tu-tien");
+        if (profile != null) {
+            File forgeJson = new File(Tools.DIR_HOME_VERSION + "/" + DAIDE_FORGE_ID + "/" + DAIDE_FORGE_ID + ".json");
+            if (forgeJson.isFile() && forgeJson.length() > 100) {
+                profile.lastVersionId = DAIDE_FORGE_ID;
+                LauncherProfiles.write();
+                playButton.setEnabled(true);
+                playButton.setText("CHƠI");
+                ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true);
+                return;
+            }
+            profile.lastVersionId = DAIDE_MC;
+            LauncherProfiles.write();
+        }
+
+        Toast.makeText(requireContext(), "Lần đầu: đang tự chuẩn bị Forge 47.3.22...", Toast.LENGTH_LONG).show();
+        ForgeDownloadTask task = new ForgeDownloadTask(new ModloaderDownloadListener() {
+            @Override
+            public void onDownloadFinished(File downloadedFile) {
+                requireActivity().runOnUiThread(() -> {
+                    Intent intent = new Intent(requireContext(), JavaGUILauncherActivity.class);
+                    // The bundled Forge installer agent makes the normal installer run unattended.
+                    ForgeUtils.addAutoInstallArgs(intent, downloadedFile, true);
+                    startActivity(intent);
+                    playButton.setEnabled(true);
+                    playButton.setText("CHƠI");
+                });
+            }
+
+            @Override
+            public void onDataNotAvailable() {
+                requireActivity().runOnUiThread(() -> {
+                    playButton.setEnabled(true);
+                    playButton.setText("CHƠI");
+                    Toast.makeText(requireContext(), "Không tìm thấy Forge 47.3.22.", Toast.LENGTH_LONG).show();
+                });
+            }
+
+            @Override
+            public void onDownloadError(Exception e) {
+                requireActivity().runOnUiThread(() -> {
+                    playButton.setEnabled(true);
+                    playButton.setText("CHƠI");
+                    Tools.showError(requireContext(), "Không tải được Forge 47.3.22", e);
+                });
+            }
+        }, DAIDE_MC, DAIDE_FORGE);
+        PojavApplication.sExecutorService.execute(task);
     }
 
     private File getCurrentProfileDirectory() {
