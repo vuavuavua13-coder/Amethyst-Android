@@ -6,6 +6,10 @@ on:
     branches:
       - dai-de-oneclick
 
+concurrency:
+  group: daide-android-oneclick
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
