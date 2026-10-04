@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import android.content.SharedPreferences;
 
 public class LauncherProfiles {
     public static MinecraftLauncherProfiles mainProfileJson;
@@ -34,6 +35,21 @@ public class LauncherProfiles {
         if (mainProfileJson.profiles == null) mainProfileJson.profiles = new HashMap<>();
         if (mainProfileJson.profiles.size() == 0)
             mainProfileJson.profiles.put(UUID.randomUUID().toString(), MinecraftProfile.getDefaultProfile());
+
+        // Đại Đế Android: keep one deterministic one-click profile pinned to MC 1.20.1.
+        // Forge installer will later replace lastVersionId with 1.20.1-forge-47.3.22.
+        final String daiDeKey = "daide-tu-tien";
+        MinecraftProfile daiDe = mainProfileJson.profiles.get(daiDeKey);
+        if (daiDe == null) {
+            daiDe = MinecraftProfile.createTemplate();
+            daiDe.name = "Đại Đế Tu Tiên";
+            daiDe.lastVersionId = "1.20.1";
+            daiDe.gameDir = Tools.DIR_GAME_NEW;
+            mainProfileJson.profiles.put(daiDeKey, daiDe);
+        }
+        LauncherPreferences.DEFAULT_PREF.edit()
+                .putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, daiDeKey)
+                .apply();
 
         // Normalize profile names from mod installers
         if(normalizeProfileIds(mainProfileJson)){
@@ -90,6 +106,7 @@ public class LauncherProfiles {
 
         // Detect denormalized keys
         for(String profileKey : launcherProfiles.profiles.keySet()){
+            if ("daide-tu-tien".equals(profileKey)) continue;
             try{
                 if(!UUID.fromString(profileKey).toString().equals(profileKey)) keys.add(profileKey);
             }catch (IllegalArgumentException exception){
