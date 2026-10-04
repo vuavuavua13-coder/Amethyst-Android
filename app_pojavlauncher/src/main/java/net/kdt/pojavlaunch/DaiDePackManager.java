@@ -151,7 +151,29 @@ public final class DaiDePackManager {
         File out = new File(modsDir, spec.fileName);
         if (isGood(out, 1024)) return;
         String url = "https://www.curseforge.com/api/v1/mods/" + spec.projectId + "/files/" + spec.fileId + "/download";
-        ensureDownloaded(url, out, 1024);
+        try {
+            ensureDownloaded(url, out, 1024);
+            return;
+        } catch (IOException primary) {
+            // CurseForge's mediafilez host occasionally answers 403 to launcher clients.
+            // Try the alternate ForgeCDN edge host using the exact same pinned file id.
+            long id;
+            try { id = Long.parseLong(spec.fileId); }
+            catch (NumberFormatException badId) { throw primary; }
+            String group = Long.toString(id / 1000L);
+            String tail = String.format(Locale.ROOT, "%03d", id % 1000L);
+            String encodedName = spec.fileName
+                    .replace(" ", "%20")
+                    .replace("[", "%5B")
+                    .replace("]", "%5D");
+            String edge = "https://edge.forgecdn.net/files/" + group + "/" + tail + "/" + encodedName;
+            try {
+                ensureDownloaded(edge, out, 1024);
+            } catch (IOException secondary) {
+                secondary.addSuppressed(primary);
+                throw secondary;
+            }
+        }
     }
 
     private static void ensureDownloaded(String url, File out, long minSize) throws IOException {
